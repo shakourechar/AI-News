@@ -260,8 +260,10 @@
   </main>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const NEWS_API_KEY = '31b2d380e6c34ea88a2060e4e87c3020';
-      const YOUTUBE_API_KEY = 'YOUR_YOUTUBE_API_KEY_HERE';
+      // Use your GNews API key here
+      const GNEWS_API_KEY = '61d2779a1b8671828500270a81cf0822';
+      const YOUTUBE_API_KEY = 'AIzaSyABgH1e_zXQ4Ly5ObB3mBFRMBCnmq06Tk0';
+      
       const categories = [
         { name: "AI Chat Platforms", query: "AI Chat platforms", emoji: "💬" },
         { name: "New LLMs", query: "new LLMs", emoji: "🧠" },
@@ -269,7 +271,7 @@
         { name: "AI Automations for Marketing and Sales", query: "AI Automations marketing sales", emoji: "🚀" }
       ];
       
-      // Formats a date string for display
+      // Format the published date for display
       function formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -279,9 +281,10 @@
         });
       }
       
-      // Fetches news articles using the /v2/everything endpoint with a defined date range and other parameters
-      function fetchNews(query, fromDate, toDate) {
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&from=${fromDate}&to=${toDate}&sortBy=publishedAt&language=en&pageSize=20&apiKey=${NEWS_API_KEY}`;
+      // Fetch news articles using the GNews API
+      function fetchNews(query) {
+        // GNews endpoint: search with query, language filter, max results and token
+        const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=20&token=${GNEWS_API_KEY}`;
         return fetch(url)
           .then(response => response.json())
           .then(data => {
@@ -290,6 +293,7 @@
               title: article.title,
               description: article.description || '',
               url: article.url,
+              // GNews returns the source as an object with a name property
               source: article.source && article.source.name ? article.source.name : 'Unknown Source',
               publishedAt: article.publishedAt,
               platform: 'news'
@@ -301,7 +305,7 @@
           });
       }
       
-      // Fetches YouTube videos related to the query
+      // Fetch YouTube videos related to the query (remains unchanged)
       function fetchYouTubeVideos(query, publishedAfter) {
         const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&publishedAfter=${publishedAfter}&key=${YOUTUBE_API_KEY}&type=video`;
         return fetch(url)
@@ -320,7 +324,7 @@
           });
       }
       
-      // Refreshes the news by querying both News API and YouTube, then renders results
+      // Refresh the news results by querying both the GNews API and YouTube
       function refreshNews() {
         const searchTerm = document.getElementById('searchInput').value;
         const container = document.getElementById('news-results');
@@ -328,9 +332,8 @@
         const spinner = document.getElementById('loading-spinner');
         spinner.style.display = 'block';
         
-        // Define date range: from two days ago until now
+        // For YouTube, we still use a date filter: articles published from two days ago
         const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
-        const now = new Date().toISOString();
         const publishedAfter = twoDaysAgo;
         
         const categoryPromises = categories.map(category => {
@@ -340,7 +343,7 @@
           }
           
           return Promise.all([
-            fetchNews(query, twoDaysAgo, now),
+            fetchNews(query),
             fetchYouTubeVideos(query, publishedAfter)
           ]).then(([newsArticles, youtubeVideos]) => {
             let combinedResults = [];
@@ -350,7 +353,7 @@
             if (youtubeVideos && Array.isArray(youtubeVideos)) {
               combinedResults = combinedResults.concat(youtubeVideos);
             }
-            // Fallback sample entry if no results
+            // Fallback sample entry if no results found
             if (combinedResults.length === 0) {
               combinedResults.push({
                 title: category.name + " Sample News Title",
