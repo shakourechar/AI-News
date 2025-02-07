@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>AI News Search</title>
   <style>
-    /* Global Styles */ 
+    /* Global Styles */
     * {
       margin: 0;
       padding: 0;
@@ -177,9 +177,7 @@
     }
     /* Enhanced Mobile Styles */
     @media (max-width: 768px) {
-      body {
-        font-size: 15px;
-      }
+      body { font-size: 15px; }
       header {
         padding: 0.75rem;
         position: sticky;
@@ -192,21 +190,14 @@
         margin-bottom: 0.5rem;
         text-align: center;
       }
-      nav {
-        width: 100%;
-        justify-content: center;
-      }
+      nav { width: 100%; justify-content: center; }
       nav button {
         padding: 0.5rem 0.75rem;
         font-size: 0.9rem;
         margin: 0.25rem;
       }
-      main {
-        padding: 0.5rem;
-      }
-      #search-section {
-        margin: 0.5rem 0 1rem 0;
-      }
+      main { padding: 0.5rem; }
+      #search-section { margin: 0.5rem 0 1rem 0; }
       #searchInput {
         padding: 0.6rem;
         font-size: 1rem;
@@ -225,57 +216,29 @@
         padding: 0.75rem;
         margin-bottom: 0.75rem;
       }
-      .news-item a {
-        font-size: 0.95rem;
-      }
-      .news-item p {
-        font-size: 0.9rem;
-      }
-      .news-item .date {
-        font-size: 0.8rem;
-      }
-      .news-item .source {
-        font-size: 0.8rem;
-      }
+      .news-item a { font-size: 0.95rem; }
+      .news-item p { font-size: 0.9rem; }
+      .news-item .date { font-size: 0.8rem; }
+      .news-item .source { font-size: 0.8rem; }
     }
     /* Small Mobile Devices */
     @media (max-width: 480px) {
-      body {
-        font-size: 14px;
-      }
-      header h1 {
-        font-size: 1.2rem;
-      }
-      .news-category {
-        padding: 0.75rem;
-      }
-      .news-item {
-        padding: 0.75rem;
-      }
-      #searchInput {
-        font-size: 0.95rem;
-      }
+      body { font-size: 14px; }
+      header h1 { font-size: 1.2rem; }
+      .news-category { padding: 0.75rem; }
+      .news-item { padding: 0.75rem; }
+      #searchInput { font-size: 0.95rem; }
     }
     /* Handle Landscape Mode */
     @media (max-height: 480px) and (orientation: landscape) {
-      header {
-        position: relative;
-      }
-      header h1 {
-        font-size: 1.2rem;
-      }
-      .news-category {
-        margin-bottom: 0.75rem;
-      }
+      header { position: relative; }
+      header h1 { font-size: 1.2rem; }
+      .news-category { margin-bottom: 0.75rem; }
     }
     /* Dark Mode Support */
     @media (prefers-color-scheme: dark) {
-      .news-item {
-        background-color: #2d2d2d;
-      }
-      #searchInput {
-        background-color: #1f1f1f;
-      }
+      .news-item { background-color: #2d2d2d; }
+      #searchInput { background-color: #1f1f1f; }
     }
   </style>
 </head>
@@ -306,6 +269,7 @@
         { name: "AI Automations for Marketing and Sales", query: "AI Automations marketing sales", emoji: "🚀" }
       ];
       
+      // Formats a date string for display
       function formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -315,24 +279,29 @@
         });
       }
       
-      function fetchNews(query, fromDate) {
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&from=${fromDate}&sortBy=publishedAt&language=en&apiKey=${NEWS_API_KEY}`;
+      // Fetches news articles using the /v2/everything endpoint with a defined date range and other parameters
+      function fetchNews(query, fromDate, toDate) {
+        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&from=${fromDate}&to=${toDate}&sortBy=publishedAt&language=en&pageSize=20&apiKey=${NEWS_API_KEY}`;
         return fetch(url)
           .then(response => response.json())
-          .then(data => data.articles.map(article => ({
-            title: article.title,
-            description: article.description || '',
-            url: article.url,
-            source: article.source && article.source.name ? article.source.name : 'Unknown Source',
-            publishedAt: article.publishedAt,
-            platform: 'news'
-          })))
+          .then(data => {
+            if (!data.articles) return [];
+            return data.articles.map(article => ({
+              title: article.title,
+              description: article.description || '',
+              url: article.url,
+              source: article.source && article.source.name ? article.source.name : 'Unknown Source',
+              publishedAt: article.publishedAt,
+              platform: 'news'
+            }));
+          })
           .catch(err => {
             console.error(err);
             return [];
           });
       }
       
+      // Fetches YouTube videos related to the query
       function fetchYouTubeVideos(query, publishedAfter) {
         const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&publishedAfter=${publishedAfter}&key=${YOUTUBE_API_KEY}&type=video`;
         return fetch(url)
@@ -351,12 +320,18 @@
           });
       }
       
+      // Refreshes the news by querying both News API and YouTube, then renders results
       function refreshNews() {
         const searchTerm = document.getElementById('searchInput').value;
         const container = document.getElementById('news-results');
         container.innerHTML = '';
         const spinner = document.getElementById('loading-spinner');
         spinner.style.display = 'block';
+        
+        // Define date range: from two days ago until now
+        const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+        const now = new Date().toISOString();
+        const publishedAfter = twoDaysAgo;
         
         const categoryPromises = categories.map(category => {
           let query = category.query;
@@ -365,7 +340,7 @@
           }
           
           return Promise.all([
-            fetchNews(query, twoDaysAgo),
+            fetchNews(query, twoDaysAgo, now),
             fetchYouTubeVideos(query, publishedAfter)
           ]).then(([newsArticles, youtubeVideos]) => {
             let combinedResults = [];
@@ -375,6 +350,7 @@
             if (youtubeVideos && Array.isArray(youtubeVideos)) {
               combinedResults = combinedResults.concat(youtubeVideos);
             }
+            // Fallback sample entry if no results
             if (combinedResults.length === 0) {
               combinedResults.push({
                 title: category.name + " Sample News Title",
@@ -395,7 +371,6 @@
               combinedResults.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'news-item';
-                // Create and append title link with platform-based emoji
                 const link = document.createElement('a');
                 const sourceEmoji = item.platform === 'youtube' ? '📺' : '📰';
                 link.href = item.url;
@@ -403,16 +378,13 @@
                 link.rel = 'noopener noreferrer';
                 link.textContent = `${sourceEmoji} ${item.title}`;
                 li.appendChild(link);
-                // Create and append description
                 const desc = document.createElement('p');
                 desc.textContent = item.description;
                 li.appendChild(desc);
-                // Create and append published date
                 const dateSpan = document.createElement('span');
                 dateSpan.className = 'date';
                 dateSpan.textContent = `Published: ${formatDate(item.publishedAt)}`;
                 li.appendChild(dateSpan);
-                // Create and append source information
                 const sourceSpan = document.createElement('span');
                 sourceSpan.className = 'source';
                 sourceSpan.textContent = `Source: ${item.source}`;
@@ -424,14 +396,10 @@
             }
           });
         });
-        
         Promise.all(categoryPromises).then(() => {
           spinner.style.display = 'none';
         });
       }
-      
-      const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const publishedAfter = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
       
       const newsSearchForm = document.getElementById('newsSearchForm');
       newsSearchForm.addEventListener('submit', (e) => {
