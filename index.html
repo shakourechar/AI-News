@@ -271,7 +271,7 @@
         { name: "AI Automations for Marketing and Sales", query: "AI Automations marketing sales", emoji: "🚀" }
       ];
       
-      // Format the published date for display
+      // Format a date string for display (MM/DD/YYYY)
       function formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -281,21 +281,27 @@
         });
       }
       
-      // Fetch news articles using the GNews API with date filtering
+      // Fetch news articles using GNews API with from/to parameters.
+      // Additionally, filter client-side so that only articles published within the last two days are kept.
       function fetchNews(query, fromDate, toDate) {
         const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=20&from=${fromDate}&to=${toDate}&sortby=publishedAt&token=${GNEWS_API_KEY}`;
         return fetch(url)
           .then(response => response.json())
           .then(data => {
             if (!data.articles) return [];
-            return data.articles.map(article => ({
-              title: article.title,
-              description: article.description || '',
-              url: article.url,
-              source: article.source && article.source.name ? article.source.name : 'Unknown Source',
-              publishedAt: article.publishedAt,
-              platform: 'news'
-            }));
+            // Compute cutoff date (two days ago)
+            const cutoff = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+            // Filter out articles older than cutoff, then map to our desired format
+            return data.articles
+              .filter(article => new Date(article.publishedAt) >= cutoff)
+              .map(article => ({
+                title: article.title,
+                description: article.description || '',
+                url: article.url,
+                source: article.source && article.source.name ? article.source.name : 'Unknown Source',
+                publishedAt: article.publishedAt,
+                platform: 'news'
+              }));
           })
           .catch(err => {
             console.error(err);
@@ -322,7 +328,7 @@
           });
       }
       
-      // Refresh the news results by querying both the GNews API and YouTube
+      // Refresh news results by querying both GNews API and YouTube
       function refreshNews() {
         const searchTerm = document.getElementById('searchInput').value;
         const container = document.getElementById('news-results');
@@ -330,7 +336,7 @@
         const spinner = document.getElementById('loading-spinner');
         spinner.style.display = 'block';
         
-        // Define date range: from two days ago until now in ISO format without milliseconds
+        // Define the date range: from two days ago until now.
         const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('.')[0] + 'Z';
         const now = new Date().toISOString().split('.')[0] + 'Z';
         const publishedAfter = twoDaysAgo;
@@ -340,7 +346,6 @@
           if (searchTerm) {
             query += ' ' + searchTerm;
           }
-          
           return Promise.all([
             fetchNews(query, twoDaysAgo, now),
             fetchYouTubeVideos(query, publishedAfter)
@@ -352,7 +357,7 @@
             if (youtubeVideos && Array.isArray(youtubeVideos)) {
               combinedResults = combinedResults.concat(youtubeVideos);
             }
-            // Fallback sample entry if no results found
+            // Fallback sample entry if no results are found
             if (combinedResults.length === 0) {
               combinedResults.push({
                 title: category.name + " Sample News Title",
