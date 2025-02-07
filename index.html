@@ -260,7 +260,7 @@
   </main>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Use your GNews API key here
+      // Use your GNews API key
       const GNEWS_API_KEY = '61d2779a1b8671828500270a81cf0822';
       const YOUTUBE_API_KEY = 'AIzaSyABgH1e_zXQ4Ly5ObB3mBFRMBCnmq06Tk0';
       
@@ -281,10 +281,9 @@
         });
       }
       
-      // Fetch news articles using the GNews API
-      function fetchNews(query) {
-        // GNews endpoint: search with query, language filter, max results and token
-        const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=20&token=${GNEWS_API_KEY}`;
+      // Fetch news articles using the GNews API with date filtering
+      function fetchNews(query, fromDate, toDate) {
+        const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=20&from=${fromDate}&to=${toDate}&sortby=publishedAt&token=${GNEWS_API_KEY}`;
         return fetch(url)
           .then(response => response.json())
           .then(data => {
@@ -293,7 +292,6 @@
               title: article.title,
               description: article.description || '',
               url: article.url,
-              // GNews returns the source as an object with a name property
               source: article.source && article.source.name ? article.source.name : 'Unknown Source',
               publishedAt: article.publishedAt,
               platform: 'news'
@@ -305,7 +303,7 @@
           });
       }
       
-      // Fetch YouTube videos related to the query (remains unchanged)
+      // Fetch YouTube videos related to the query (unchanged)
       function fetchYouTubeVideos(query, publishedAfter) {
         const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&publishedAfter=${publishedAfter}&key=${YOUTUBE_API_KEY}&type=video`;
         return fetch(url)
@@ -332,8 +330,9 @@
         const spinner = document.getElementById('loading-spinner');
         spinner.style.display = 'block';
         
-        // For YouTube, we still use a date filter: articles published from two days ago
-        const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+        // Define date range: from two days ago until now in ISO format without milliseconds
+        const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('.')[0] + 'Z';
+        const now = new Date().toISOString().split('.')[0] + 'Z';
         const publishedAfter = twoDaysAgo;
         
         const categoryPromises = categories.map(category => {
@@ -343,7 +342,7 @@
           }
           
           return Promise.all([
-            fetchNews(query),
+            fetchNews(query, twoDaysAgo, now),
             fetchYouTubeVideos(query, publishedAfter)
           ]).then(([newsArticles, youtubeVideos]) => {
             let combinedResults = [];
