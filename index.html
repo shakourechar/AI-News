@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI News Search</title>
+  <!-- Single consolidated style tag -->
   <style>
     * {
       margin: 0;
@@ -16,7 +17,7 @@
       background-color: #121212;
       color: #fff;
       line-height: 1.6;
-      padding: 0.5rem;
+      padding: 8px;
     }
 
     header {
@@ -27,6 +28,8 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
+      border-radius: 8px;
+      margin-bottom: 1rem;
     }
 
     header h1 {
@@ -91,6 +94,10 @@
       border-color: #2980b9;
     }
 
+    #searchInput::placeholder {
+      color: #888;
+    }
+
     #loading-spinner {
       display: none;
       width: 40px;
@@ -129,6 +136,7 @@
       margin-bottom: 1rem;
       border-bottom: 2px solid #2980b9;
       padding-bottom: 0.5rem;
+      color: #fff;
     }
 
     .news-category ul {
@@ -141,12 +149,15 @@
       padding: 1rem;
       background-color: #2d2d2d;
       border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     .news-item a {
       color: #66ccff;
       text-decoration: none;
       font-weight: 500;
+      display: block;
+      margin-bottom: 0.5rem;
     }
 
     .news-item a:hover {
@@ -171,6 +182,10 @@
       #newsSearchForm {
         flex-direction: column;
       }
+
+      .news-category {
+        margin: 1rem 0;
+      }
     }
   </style>
 </head>
@@ -194,8 +209,8 @@
   </main>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const NEWS_API_KEY = '31b2d380e6c34ea88a2060e4e87c3020';
-      const YOUTUBE_API_KEY = 'AIzaSyABgH1e_zXQ4Ly5ObB3mBFRMBCnmq06Tk0';
+      const NEWS_API_KEY = 'YOUR_NEWS_API_KEY_HERE';
+      const YOUTUBE_API_KEY = 'YOUR_YOUTUBE_API_KEY_HERE';
 
       const categories = [
         { name: "AI Chat Platforms", query: "AI Chat platforms", emoji: "💬" },
